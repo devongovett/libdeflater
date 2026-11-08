@@ -23,6 +23,7 @@ exclude = [
 
 [dependencies]
 libdeflate-sys = { version = "1.26.1", path = "libdeflate-sys" }
+rayon = { version = "1.10", optional = true }
 
 [dev-dependencies]
 criterion = "0.3"
@@ -44,5 +45,8 @@ freestanding = ["libdeflate-sys/freestanding", "use_rust_alloc"]
 # Link to system/external libdeflate library when available, instead of
 # building it from source.
 dynamic = ["libdeflate-sys/dynamic"]
+# Adds `Compressor::*_compress_parallel`, which compress large inputs in chunks on rayon's thread
+# pool. Needs the bundled libdeflate (it uses libdeflate_deflate_compress_nonfinal()).
+parallel = ["dep:rayon", "libdeflate-sys/nonfinal"]
 
 [workspace]

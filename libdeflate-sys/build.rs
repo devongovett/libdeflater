@@ -5,7 +5,7 @@ use std::path::{Path, PathBuf};
 fn main() {
     let dst = PathBuf::from(env::var_os("OUT_DIR").unwrap());
 
-    #[cfg(feature = "dynamic")]
+    #[cfg(all(feature = "dynamic", not(feature = "nonfinal")))]
     if pkg_config::Config::new()
         .print_system_libs(false)
         .cargo_metadata(true)

@@ -23,3 +23,6 @@ pkg-config = { version = "0.3.9", optional = true }
 [features]
 freestanding = []
 dynamic = ["pkg-config"]
+# Uses libdeflate_deflate_compress_nonfinal(), which only the bundled libdeflate has, so always
+# builds it rather than linking a system libdeflate (even with `dynamic`).
+nonfinal = []

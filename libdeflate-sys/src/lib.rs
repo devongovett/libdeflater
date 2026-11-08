@@ -87,6 +87,19 @@ extern "C" {
                                        out: *mut ::std::os::raw::c_void,
                                        out_nbytes_avail: usize) -> usize;
 
+    /// Like `libdeflate_deflate_compress`, but no block is marked final, and the output ends
+    /// with an empty stored block (a sync flush), so more DEFLATE data can follow it. Needs
+    /// `libdeflate_deflate_compress_bound() + 5` bytes of output space. Returns 0 if that's too
+    /// small, or for inputs this level outputs as uncompressed (always final) blocks.
+    ///
+    /// Not in upstream libdeflate: only available in the bundled build (the `nonfinal` feature
+    /// prevents linking a system libdeflate).
+    pub fn libdeflate_deflate_compress_nonfinal(compressor: *mut libdeflate_compressor,
+                                                in_: *const ::std::os::raw::c_void,
+                                                in_nbytes: usize,
+                                                out: *mut ::std::os::raw::c_void,
+                                                out_nbytes_avail: usize) -> usize;
+
     pub fn libdeflate_zlib_compress_bound(compressor: *mut libdeflate_compressor,
                                           in_nbytes: usize) -> usize;
 

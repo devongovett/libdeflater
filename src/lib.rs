@@ -52,6 +52,11 @@
 //! - [`zlib_compress_bound`]
 //! - [`gzip_compress_bound`]
 //!
+//! With the `parallel` feature, the `*_compress_parallel` methods (and their
+//! `*_compress_bound_parallel` bounds) compress large inputs in fixed-size
+//! chunks on rayon's thread pool, producing a single stream in the same format.
+//! Inputs smaller than two chunks are compressed as the other methods do.
+//!
 //! [`Compressor::new`]: struct.Compressor.html#method.new
 //! [`Compressor`]: struct.Compressor.html
 //! [`deflate_compress`]: struct.Compressor.html#method.deflate_compress
@@ -86,6 +91,10 @@ use libdeflate_sys::{libdeflate_decompressor,
 
 #[cfg(feature = "use_rust_alloc")]
 mod malloc_wrapper;
+#[cfg(feature = "parallel")]
+mod parallel;
+#[cfg(feature = "parallel")]
+pub use parallel::PARALLEL_CHUNK_SIZE;
 
 unsafe fn alloc_compressor(compression_level: std::os::raw::c_int) -> *mut libdeflate_compressor {
     #[cfg(feature = "use_rust_alloc")]
@@ -403,6 +412,8 @@ type CompressionResult<T> = std::result::Result<T, CompressionError>;
 /// DEFLATE, zlib, or gzip formats.
 pub struct Compressor {
     p: NonNull<libdeflate_compressor>,
+    #[cfg_attr(not(feature = "parallel"), allow(dead_code))]
+    lvl: CompressionLvl,
 }
 unsafe impl Send for Compressor {}
 unsafe impl Sync for Compressor {}
@@ -422,7 +433,7 @@ impl Compressor {
         unsafe {
             let ptr = alloc_compressor(lvl.0 as _);
             if let Some(ptr) = NonNull::new(ptr) {
-                Compressor{ p: ptr }
+                Compressor{ p: ptr, lvl }
             } else {
                 panic!("libdeflate_alloc_compressor returned NULL: out of memory");
             }
